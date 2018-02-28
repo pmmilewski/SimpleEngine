@@ -11,6 +11,11 @@
 #include <windows.h>
 
 //////////////////////////////
+// MY CLASS INCLUDES	    //
+//////////////////////////////
+#include "d3dclass.h"
+
+//////////////////////////////
 // GLOBALS				    //
 //////////////////////////////
 const bool FULL_SCREEN = false;
@@ -34,6 +39,9 @@ public:
 
 private:
 	bool Render();
+
+private:
+	D3DClass* m_Direct3D;
 };
 
 
