@@ -6,7 +6,7 @@
 // GLOBALS				     //
 ///////////////////////////////
 
-cbuffer MatixBuffer
+cbuffer MatrixBuffer
 {
 	matrix worldMatrix;
 	matrix viewMatrix;
@@ -19,7 +19,7 @@ cbuffer MatixBuffer
 struct VertexInputType
 {
 	float4 position: POSITION;
-	float2 tex: TEXCOORD;
+	float2 tex: TEXCOORD0;
 };
 
 struct PixelInputType
