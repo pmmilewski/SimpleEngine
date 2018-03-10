@@ -69,7 +69,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device *device, HWND hwnd, const
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer = nullptr;
 
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "ColorVertexShader", "vs_5_0",
+	result = D3DCompileFromFile(vsFilename, NULL, NULL, "TextureVertexShader", "vs_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
@@ -87,7 +87,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device *device, HWND hwnd, const
 		return false;
 	}
 
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_0",
+	result = D3DCompileFromFile(psFilename, NULL, NULL, "TexturePixelShader", "ps_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
@@ -130,7 +130,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device *device, HWND hwnd, const
 	polygonLayout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[0].InstanceDataStepRate = 0;
 
-	polygonLayout[1].SemanticName = "TEXTCOORD";
+	polygonLayout[1].SemanticName = "TEXCOORD";
 	polygonLayout[1].SemanticIndex = 0;
 	polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	polygonLayout[1].InputSlot = 0;
