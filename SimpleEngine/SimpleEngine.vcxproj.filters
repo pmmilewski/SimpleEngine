@@ -79,16 +79,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="TextureVertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="TexturePixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="data\stone01.tga">
       <Filter>Pliki zasobów</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="texture.ps">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="texture.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

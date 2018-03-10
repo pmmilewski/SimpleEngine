@@ -1,29 +1,36 @@
-#pragma once
-//////////////////////////////////////
-// Filename: modelclass.h		    //
-//////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Filename: modelclass.h
+////////////////////////////////////////////////////////////////////////////////
 #ifndef _MODELCLASS_H_
 #define _MODELCLASS_H_
 
 
-
-/////////////////////////////////////
-// INCLUDES						  //
-///////////////////////////////////
+//////////////
+// INCLUDES //
+//////////////
 #include <d3d11.h>
-#include <DirectXMath.h>
+#include <directxmath.h>
 using namespace DirectX;
 
-/////////////////////////////////////
-// MY INCLUDES			     	  //
-///////////////////////////////////
+
+///////////////////////
+// MY CLASS INCLUDES //
+///////////////////////
 #include "textureclass.h"
 
-/////////////////////////////////////
-// Class name: ModelClass		  //
-///////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Class name: ModelClass
+////////////////////////////////////////////////////////////////////////////////
 class ModelClass
 {
+private:
+	struct VertexType
+	{
+		XMFLOAT3 position;
+		XMFLOAT2 texture;
+	};
+
 public:
 	ModelClass();
 	ModelClass(const ModelClass&);
@@ -37,15 +44,10 @@ public:
 	ID3D11ShaderResourceView* GetTexture();
 
 private:
-	struct VertexType
-	{
-		XMFLOAT3 position;
-		XMFLOAT2 texture;
-	};
-
 	bool InitializeBuffers(ID3D11Device*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
+
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, const char*);
 	void ReleaseTexture();
 
@@ -55,4 +57,4 @@ private:
 	TextureClass* m_Texture;
 };
 
-#endif // !_MODELCLASS_H_
+#endif

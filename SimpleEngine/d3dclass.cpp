@@ -1,29 +1,34 @@
+////////////////////////////////////////////////////////////////////////////////
+// Filename: d3dclass.cpp
+////////////////////////////////////////////////////////////////////////////////
 #include "d3dclass.h"
-///////////////////////////////
-// Filename: d3dclass.cpp    //
-///////////////////////////////
+
 
 D3DClass::D3DClass()
 {
-	m_swapChain = nullptr;
-	m_device = nullptr;
-	m_deviceContext = nullptr;
-	m_renderTargetView = nullptr;
-	m_depthStencilBuffer = nullptr;
-	m_depthStencilView = nullptr;
-	m_depthStencilState = nullptr;
-	m_rasterState = nullptr;
+	m_swapChain = 0;
+	m_device = 0;
+	m_deviceContext = 0;
+	m_renderTargetView = 0;
+	m_depthStencilBuffer = 0;
+	m_depthStencilState = 0;
+	m_depthStencilView = 0;
+	m_rasterState = 0;
 }
 
-D3DClass::D3DClass(const D3DClass &)
+
+D3DClass::D3DClass(const D3DClass& other)
 {
 }
+
 
 D3DClass::~D3DClass()
 {
 }
 
-bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullscreen, float screenDepth, float screenNear)
+
+bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullscreen,
+	float screenDepth, float screenNear)
 {
 	HRESULT result;
 	IDXGIFactory* factory;
@@ -44,6 +49,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_VIEWPORT viewport;
 	float fieldOfView, screenAspect;
 
+
+	// Store the vsync setting.
 	m_vsync_enabled = vsync;
 
 	// Create a DirectX graphics interface factory.
@@ -76,7 +83,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 	// Create a list to hold all the possible display modes for this monitor/video card combination.
 	displayModeList = new DXGI_MODE_DESC[numModes];
-	if (displayModeList == nullptr)
+	if (!displayModeList)
 	{
 		return false;
 	}
@@ -92,9 +99,9 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// When a match is found store the numerator and denominator of the refresh rate for that monitor.
 	for (i = 0; i<numModes; i++)
 	{
-		if (displayModeList[i].Width == static_cast<unsigned int>(screenWidth))
+		if (displayModeList[i].Width == (unsigned int)screenWidth)
 		{
-			if (displayModeList[i].Height == static_cast<unsigned int>(screenHeight))
+			if (displayModeList[i].Height == (unsigned int)screenHeight)
 			{
 				numerator = displayModeList[i].RefreshRate.Numerator;
 				denominator = displayModeList[i].RefreshRate.Denominator;
@@ -110,7 +117,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Store the dedicated video card memory in megabytes.
-	m_videoCardMemory = static_cast<int>(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
+	m_videoCardMemory = (int)(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
 
 	// Convert the name of the video card to a character array and store it.
 	error = wcstombs_s(&stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
@@ -119,24 +126,36 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	// Release the display mode list.
 	delete[] displayModeList;
-	displayModeList = nullptr;
+	displayModeList = 0;
 
+	// Release the adapter output.
 	adapterOutput->Release();
-	adapterOutput = nullptr;
+	adapterOutput = 0;
 
+	// Release the adapter.
+	adapter->Release();
+	adapter = 0;
+
+	// Release the factory.
 	factory->Release();
-	factory = nullptr;
+	factory = 0;
 
+	// Initialize the swap chain description.
 	ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
 
+	// Set to a single back buffer.
 	swapChainDesc.BufferCount = 1;
 
+	// Set the width and height of the back buffer.
 	swapChainDesc.BufferDesc.Width = screenWidth;
 	swapChainDesc.BufferDesc.Height = screenHeight;
 
+	// Set regular 32-bit surface for the back buffer.
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
+	// Set the refresh rate of the back buffer.
 	if (m_vsync_enabled)
 	{
 		swapChainDesc.BufferDesc.RefreshRate.Numerator = numerator;
@@ -148,13 +167,17 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
 	}
 
+	// Set the usage of the back buffer.
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
+	// Set the handle for the window to render to.
 	swapChainDesc.OutputWindow = hwnd;
 
+	// Turn multisampling off.
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SampleDesc.Quality = 0;
 
+	// Set to full screen or windowed mode.
 	if (fullscreen)
 	{
 		swapChainDesc.Windowed = false;
@@ -164,13 +187,17 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		swapChainDesc.Windowed = true;
 	}
 
+	// Set the scan line ordering and scaling to unspecified.
 	swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
+	// Discard the back buffer contents after presenting.
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
+	// Don't set the advanced flags.
 	swapChainDesc.Flags = 0;
 
+	// Set the feature level to DirectX 11.
 	featureLevel = D3D_FEATURE_LEVEL_11_0;
 
 	// Create the swap chain, Direct3D device, and Direct3D device context.
@@ -180,24 +207,24 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	{
 		return false;
 	}
-	
-	// Getting pointer to the back buffer.
+
+	// Get the pointer to the back buffer.
 	result = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	// Create the render target view withe the back buffer pointer.
+	// Create the render target view with the back buffer pointer.
 	result = m_device->CreateRenderTargetView(backBufferPtr, NULL, &m_renderTargetView);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	//Releasing
+	// Release pointer to the back buffer as we no longer need it.
 	backBufferPtr->Release();
-	backBufferPtr = nullptr;
+	backBufferPtr = 0;
 
 	// Initialize the description of the depth buffer.
 	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
@@ -317,18 +344,12 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Initialize the world matrix to the identity matrix.
 	m_worldMatrix = XMMatrixIdentity();
 
-	/*
-	This is where you would generally create a view matrix.
-	The view matrix is used to calculate the position of where we are looking at the scene from.
-	You can think of it as a camera and you only view the scene through this camera.
-	Because of its purpose I am going to create it in a camera class in later tutorials since logically it fits better there and just skip it for now.
-	*/
-
 	// Create an orthographic projection matrix for 2D rendering.
 	m_orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
 	return true;
 }
+
 
 void D3DClass::Shutdown()
 {
@@ -389,6 +410,7 @@ void D3DClass::Shutdown()
 	return;
 }
 
+
 void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 {
 	float color[4];
@@ -409,6 +431,7 @@ void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 	return;
 }
 
+
 void D3DClass::EndScene()
 {
 	// Present the back buffer to the screen since rendering is complete.
@@ -426,15 +449,18 @@ void D3DClass::EndScene()
 	return;
 }
 
-ID3D11Device * D3DClass::GetDevice()
+
+ID3D11Device* D3DClass::GetDevice()
 {
 	return m_device;
 }
 
-ID3D11DeviceContext * D3DClass::GetDeviceContext()
+
+ID3D11DeviceContext* D3DClass::GetDeviceContext()
 {
 	return m_deviceContext;
 }
+
 
 void D3DClass::GetProjectionMatrix(XMMATRIX& projectionMatrix)
 {
@@ -455,6 +481,7 @@ void D3DClass::GetOrthoMatrix(XMMATRIX& orthoMatrix)
 	orthoMatrix = m_orthoMatrix;
 	return;
 }
+
 
 void D3DClass::GetVideoCardInfo(char* cardName, int& memory)
 {
