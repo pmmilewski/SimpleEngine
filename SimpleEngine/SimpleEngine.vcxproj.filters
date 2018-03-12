@@ -48,6 +48,9 @@
     <ClCompile Include="textureclass.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="lightshaderclass.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="systemclass.h">
@@ -77,6 +80,9 @@
     <ClInclude Include="textureclass.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="lightshaderclass.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\stone01.tga">
@@ -88,6 +94,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="texture.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="light.ps">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="light.vs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
