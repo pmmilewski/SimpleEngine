@@ -110,21 +110,27 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	// Load the vertex array with data.
 	vertices[0].position = XMFLOAT3(-1.0f, 1.0f, 0.0f); 
 	vertices[0].texture = XMFLOAT2(0.0f, 0.0f);
+	vertices[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	vertices[1].position = XMFLOAT3(1.0f, 1.0f, 0.0f); 
 	vertices[1].texture = XMFLOAT2(1.0f, 0.0f);
+	vertices[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	vertices[2].position = XMFLOAT3(-1.0f, -1.0f, 0.0f); 
 	vertices[2].texture = XMFLOAT2(0.0f, 1.0f);
+	vertices[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	vertices[3].position = XMFLOAT3(1.0f, 1.0f, 0.0f);
 	vertices[3].texture = XMFLOAT2(1.0f, 0.0f);
+	vertices[3].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	vertices[4].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
 	vertices[4].texture = XMFLOAT2(1.0f, 1.0f);
+	vertices[4].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	vertices[5].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);
 	vertices[5].texture = XMFLOAT2(0.0f, 1.0f);
+	vertices[5].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	// Load the index array with data.
 	indices[0] = 0;
@@ -142,7 +148,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
-	// Give the subresource structure a pointer to the vertex data.
+	// Give the sub resource structure a pointer to the vertex data.
     vertexData.pSysMem = vertices;
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
@@ -162,7 +168,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 
-	// Give the subresource structure a pointer to the index data.
+	// Give the sub resource structure a pointer to the index data.
     indexData.pSysMem = indices;
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;

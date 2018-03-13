@@ -51,6 +51,9 @@
     <ClCompile Include="lightshaderclass.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="lightclass.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="systemclass.h">
@@ -83,9 +86,15 @@
     <ClInclude Include="lightshaderclass.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="lightclass.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\stone01.tga">
+      <Filter>Pliki zasobów</Filter>
+    </Image>
+    <Image Include="data\custom01.tga">
       <Filter>Pliki zasobów</Filter>
     </Image>
   </ItemGroup>
