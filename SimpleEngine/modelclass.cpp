@@ -6,9 +6,10 @@
 
 ModelClass::ModelClass()
 {
-	m_vertexBuffer = 0;
-	m_indexBuffer = 0;
-	m_Texture = 0;
+	m_vertexBuffer = nullptr;
+	m_indexBuffer = nullptr;
+	m_Texture = nullptr;
+	m_model = nullptr;
 }
 
 
@@ -22,10 +23,15 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* textureFilename)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* modelFilename, const char* textureFilename)
 {
 	bool result;
 
+	result = LoadModel(modelFilename);
+	if (!result)
+	{
+		return false;
+	}
 
 	// Initialize the vertex and index buffers.
 	result = InitializeBuffers(device);
@@ -52,6 +58,8 @@ void ModelClass::Shutdown()
 
 	// Shutdown the vertex and index buffers.
 	ShutdownBuffers();
+
+	ReleaseModel();
 
 	return;
 }
@@ -86,13 +94,6 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
-
-	// Set the number of vertices in the vertex array.
-	m_vertexCount = 6;
-
-	// Set the number of indices in the index array.
-	m_indexCount = 6;
-
 	// Create the vertex array.
 	vertices = new VertexType[m_vertexCount];
 	if(!vertices)
@@ -107,38 +108,16 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 		return false;
 	}
 
-	// Load the vertex array with data.
-	vertices[0].position = XMFLOAT3(-1.0f, 1.0f, 0.0f); 
-	vertices[0].texture = XMFLOAT2(0.0f, 0.0f);
-	vertices[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	// Load the vertex and index array with data.
+	for (size_t i=0; i<m_vertexCount; i++)
+	{
+		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
+		vertices[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
+		vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
 
-	vertices[1].position = XMFLOAT3(1.0f, 1.0f, 0.0f); 
-	vertices[1].texture = XMFLOAT2(1.0f, 0.0f);
-	vertices[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-	vertices[2].position = XMFLOAT3(-1.0f, -1.0f, 0.0f); 
-	vertices[2].texture = XMFLOAT2(0.0f, 1.0f);
-	vertices[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-	vertices[3].position = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	vertices[3].texture = XMFLOAT2(1.0f, 0.0f);
-	vertices[3].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-	vertices[4].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
-	vertices[4].texture = XMFLOAT2(1.0f, 1.0f);
-	vertices[4].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-	vertices[5].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);
-	vertices[5].texture = XMFLOAT2(0.0f, 1.0f);
-	vertices[5].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-	// Load the index array with data.
-	indices[0] = 0;
-	indices[1] = 1;
-	indices[2] = 2;
-	indices[3] = 3;
-	indices[4] = 4;
-	indices[5] = 5;
+		indices[i] = i;
+	}
+	
 
 	// Set up the description of the static vertex buffer.
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -197,14 +176,14 @@ void ModelClass::ShutdownBuffers()
 	if(m_indexBuffer)
 	{
 		m_indexBuffer->Release();
-		m_indexBuffer = 0;
+		m_indexBuffer = nullptr;
 	}
 
 	// Release the vertex buffer.
 	if(m_vertexBuffer)
 	{
 		m_vertexBuffer->Release();
-		m_vertexBuffer = 0;
+		m_vertexBuffer = nullptr;
 	}
 
 	return;
@@ -265,6 +244,65 @@ void ModelClass::ReleaseTexture()
 		m_Texture->Shutdown();
 		delete m_Texture;
 		m_Texture = 0;
+	}
+
+	return;
+}
+
+bool ModelClass::LoadModel(const char* filename)
+{
+	ifstream fin;
+	char input;
+	
+	fin.open(filename);
+	if (fin.fail())
+	{
+		return false;
+	}
+
+	// Read up to the value of vertex count.
+	fin.get(input);
+	while (input != ':')
+	{
+		fin.get(input);
+	}
+
+	fin >> m_vertexCount;
+	m_indexCount = m_vertexCount;
+	m_model = new ModelType[m_vertexCount];
+	if (!m_model)
+	{
+		return false;
+	}
+	
+	// Read up to the beginning of the data.
+	fin.get(input);
+	while (input != ':')
+	{
+		fin.get(input);
+	}
+	fin.get(input);
+	fin.get(input);
+
+	for (size_t i = 0; i<m_vertexCount; i++)
+	{
+		fin >> m_model[i].x >> m_model[i].y >> m_model[i].z;
+		fin >> m_model[i].tu >> m_model[i].tv;
+		fin >> m_model[i].nx >> m_model[i].ny >> m_model[i].nz;
+
+	}
+
+	fin.close();
+
+	return true;
+}
+
+void ModelClass::ReleaseModel()
+{
+	if (m_model)
+	{
+		delete[] m_model;
+		m_model = nullptr;
 	}
 
 	return;
