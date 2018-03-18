@@ -10,6 +10,7 @@ LightShaderClass::LightShaderClass()
 	m_layout = nullptr;
 	m_sampleState = nullptr;
 	m_matrixBuffer = nullptr;
+	m_cameraBuffer = nullptr;
 	m_lightBuffer = nullptr;
 }
 
@@ -18,8 +19,7 @@ LightShaderClass::LightShaderClass(const LightShaderClass &other)
 }
 
 LightShaderClass::~LightShaderClass()
-{
-}
+= default;
 
 bool LightShaderClass::Initialize(ID3D11Device *device, HWND hwnd)
 {
@@ -39,14 +39,14 @@ bool LightShaderClass::Initialize(ID3D11Device *device, HWND hwnd)
 void LightShaderClass::Shutdown()
 {
 	ShutdownShader();
-	return;
 }
 
-bool LightShaderClass::Render(ID3D11DeviceContext *deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView *texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor)
+bool LightShaderClass::Render(ID3D11DeviceContext *deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView *texture,
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, FLOAT specularPower)
 {
 	bool result;
 
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, ambientColor, diffuseColor);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower);
 	if (!result)
 	{
 		return false;
@@ -68,13 +68,14 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	unsigned int numElements;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC cameraBufferDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
 
 	errorMessage = nullptr;
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer = nullptr;
 
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "LightVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS,
+	result = D3DCompileFromFile(vsFilename, nullptr, nullptr, "LightVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS,
 		0, &vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
@@ -89,7 +90,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 		return false;
 	}
 
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "LightPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS,
+	result = D3DCompileFromFile(psFilename, nullptr, nullptr, "LightPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS,
 		0, &pixelShaderBuffer, &errorMessage);
 
 	if (FAILED(result))
@@ -105,13 +106,13 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 		return false;
 	}
 
-	result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
+	result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), nullptr, &m_vertexShader);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
+	result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), nullptr, &m_pixelShader);
 	if (FAILED(result))
 	{
 		return false;
@@ -182,7 +183,20 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	matrixBufferDesc.MiscFlags = 0;
 	matrixBufferDesc.StructureByteStride = 0;
 
-	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
+	result = device->CreateBuffer(&matrixBufferDesc, nullptr, &m_matrixBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	cameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cameraBufferDesc.ByteWidth = sizeof(CameraBufferType);
+	cameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cameraBufferDesc.MiscFlags = 0;
+	cameraBufferDesc.StructureByteStride = 0;
+
+	result = device->CreateBuffer(&cameraBufferDesc, nullptr, &m_cameraBuffer);
 	if (FAILED(result))
 	{
 		return false;
@@ -195,7 +209,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 
-	result = device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
+	result = device->CreateBuffer(&lightBufferDesc, nullptr, &m_lightBuffer);
 	if (FAILED(result))
 	{
 		return false;
@@ -210,6 +224,12 @@ void LightShaderClass::ShutdownShader()
 	{
 		m_lightBuffer->Release();
 		m_lightBuffer = nullptr;
+	}
+
+	if (m_cameraBuffer)
+	{
+		m_cameraBuffer->Release();
+		m_cameraBuffer = nullptr;
 	}
 
 	if (m_matrixBuffer)
@@ -242,7 +262,6 @@ void LightShaderClass::ShutdownShader()
 		m_vertexShader = nullptr;
 	}
 
-	return;
 }
 
 void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, const WCHAR* shaderFilename)
@@ -272,21 +291,21 @@ void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 
 	// Release the error message.
 	errorMessage->Release();
-	errorMessage = 0;
+	errorMessage = nullptr;
 
 	// Pop a message up on the screen to notify the user to check the text file for compile errors.
 	MessageBox(hwnd, L"Error compiling shader.  Check shader-error.txt for message.", shaderFilename, MB_OK);
 
-	return;
 }
 
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix,
-	ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor)
+	ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, FLOAT specularPower)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	MatrixBufferType* dataPtr;
-	LightBufferType* dataPtr2;
+	MatrixBufferType *dataPtr;
+	LightBufferType *dataPtr2;
+	CameraBufferType *dataPtr3;
 	unsigned int bufferNumber;
 
 
@@ -319,6 +338,22 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
 	// Finally set the constant buffer in the vertex shader with the updated values.
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
+	// Camera buffer operations
+	result = deviceContext->Map(m_cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	dataPtr3 = (CameraBufferType *)mappedResource.pData;
+	dataPtr3->cameraPosition = cameraPosition;
+	dataPtr3->padding = 0.0f;
+	
+	deviceContext->Unmap(m_cameraBuffer, 0);
+	
+	bufferNumber = 1;
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
+
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 
@@ -336,7 +371,8 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
 	dataPtr2->ambientColor = ambientColor;
 	dataPtr2->diffuseColor = diffuseColor;
 	dataPtr2->lightDirection = lightDirection;
-	// Maybe padding will be needed
+	dataPtr2->specularColor = specularColor;
+	dataPtr2->specularPower = specularPower;
 	
 	// Unlock the constant buffer.
 	deviceContext->Unmap(m_lightBuffer, 0);
@@ -352,14 +388,13 @@ void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int inde
 {
 	deviceContext->IASetInputLayout(m_layout);
 
-	deviceContext->VSSetShader(m_vertexShader, NULL, 0);
-	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
+	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
+	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	deviceContext->DrawIndexed(indexCount, 0, 0);
 
-	return;
 }
 
 

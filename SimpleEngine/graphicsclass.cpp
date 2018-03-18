@@ -20,8 +20,7 @@ GraphicsClass::GraphicsClass(const GraphicsClass& other)
 
 
 GraphicsClass::~GraphicsClass()
-{
-}
+= default;
 
 
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
@@ -62,7 +61,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "data/cube.txt", "data/stone01.tga");
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "data/sphere.txt", "data/red01.tga");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -89,7 +88,9 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(1.0f, 0.0f, 0.0f);
+	m_Light->SetDirection(1.0f, 0.0f, 1.0f);
+	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetSpecularPower(32.0f);
 
 	return true;
 }
@@ -115,14 +116,14 @@ void GraphicsClass::Shutdown()
 	{
 		m_Model->Shutdown();
 		delete m_Model;
-		m_Model = 0;
+		m_Model = nullptr;
 	}
 
 	// Release the camera object.
 	if (m_Camera)
 	{
 		delete m_Camera;
-		m_Camera = 0;
+		m_Camera = nullptr;
 	}
 
 	// Release the D3D object.
@@ -130,10 +131,9 @@ void GraphicsClass::Shutdown()
 	{
 		m_Direct3D->Shutdown();
 		delete m_Direct3D;
-		m_Direct3D = 0;
+		m_Direct3D = nullptr;
 	}
 
-	return;
 }
 
 
@@ -184,7 +184,9 @@ bool GraphicsClass::Render(float rotation)
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	// Render the model using the texture shader.
-	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
+	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 	if (!result)
 	{
 		return false;
