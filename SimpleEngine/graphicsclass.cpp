@@ -11,6 +11,7 @@ GraphicsClass::GraphicsClass()
 	m_Model = nullptr;
 	m_LightShader = nullptr;
 	m_Light = nullptr;
+	m_Bitmap = nullptr;
 }
 
 
@@ -92,12 +93,52 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(32.0f);
 
+	// Create the texture shader object.
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader)
+	{
+		return false;
+	}
+
+	// Initialize the texture shader object.
+	result = m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_Bitmap = new BitmapClass;
+	if (!m_Bitmap)
+	{
+		return false;
+	}
+
+	result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, "data/stone01.tga", 100, 100);
+	if (!result)
+	{
+		return false;
+	}
+
 	return true;
 }
 
 
 void GraphicsClass::Shutdown()
 {
+	if (m_Bitmap)
+	{
+		delete m_Bitmap;
+		m_Bitmap = nullptr;
+	}
+
+	if (m_TextureShader)
+	{
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
+	}
+
 	if (m_Light)
 	{
 		delete m_Light;
@@ -161,7 +202,7 @@ bool GraphicsClass::Frame()
 
 bool GraphicsClass::Render(float rotation)
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, view2DMatrix, projectionMatrix, orthoMatrix;
 	bool result;
 
 
@@ -175,6 +216,31 @@ bool GraphicsClass::Render(float rotation)
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
+
+	m_Direct3D->TurnZBufferOff();
+
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 100, 100);
+	if (!result)
+	{
+		return false;
+	}
+
+	// TODO: Implement prototype for second view
+	/*
+	Once the vertex/index buffers are prepared we draw them using the texture shader.
+	Notice we send in the orthoMatrix instead of the projectionMatrix for rendering 2D.
+	Due note also that if your view matrix is changing you will need to create a default one for 2D rendering and use it instead of the regular view matrix.
+	In this tutorial using the regular view matrix is fine as the camera in this tutorial is stationary.
+	*/
+
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	m_Direct3D->TurnZBufferOn();
 
 	// Rotate the world matrix by the rotation value so that the triangle will spin.
 	worldMatrix = XMMatrixRotationY(rotation);
