@@ -169,6 +169,21 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 			return 0;
 		}
 
+		case WM_MOUSEMOVE:
+		{
+			m_Input->UpdateMouseX(GET_X_LPARAM(lparam));
+			m_Input->UpdateMouseY(GET_Y_LPARAM(lparam));
+		}
+
+		case WM_LBUTTONUP:
+		{
+			m_Input->LMBClicked(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+		}
+
+		case WM_LBUTTONDOWN:
+		{
+			m_Input->LMBReleased(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+		}
 		// Any other messages send to the default message handler as our application won't make use of them.
 		default:
 		{
@@ -254,7 +269,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	SetFocus(m_hwnd);
 
 	// Hide the mouse cursor.
-	ShowCursor(false);
+	ShowCursor(true);
 
 	return;
 }

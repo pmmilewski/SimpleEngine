@@ -14,7 +14,7 @@
 //////////////
 // INCLUDES //
 //////////////
-#include <windows.h>
+#include <Windowsx.h>
 
 
 ///////////////////////

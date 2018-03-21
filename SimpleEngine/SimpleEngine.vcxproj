@@ -155,6 +155,7 @@
     <ClCompile Include="textclass.cpp" />
     <ClCompile Include="textureclass.cpp" />
     <ClCompile Include="textureshaderclass.cpp" />
+    <ClCompile Include="XInputClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmapclass.h" />
@@ -172,6 +173,7 @@
     <ClInclude Include="textureclass.h" />
     <ClInclude Include="textureshaderclass.h" />
     <ClInclude Include="systemclass.h" />
+    <ClInclude Include="XInputClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\custom01.tga" />
