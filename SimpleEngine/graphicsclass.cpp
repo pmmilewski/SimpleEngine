@@ -8,10 +8,12 @@ GraphicsClass::GraphicsClass()
 {
 	m_Direct3D = nullptr;
 	m_Camera = nullptr;
+	m_2DCamera = nullptr;
 	m_Model = nullptr;
 	m_LightShader = nullptr;
 	m_Light = nullptr;
 	m_Bitmap = nullptr;
+	m_Text = nullptr;
 }
 
 
@@ -27,7 +29,7 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
-
+	XMMATRIX view2DMatrix;
 
 	// Create the Direct3D object.
 	m_Direct3D = new D3DClass;
@@ -50,6 +52,16 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	{
 		return false;
 	}
+
+	// Create the 2Dcamera object.
+	m_2DCamera = new CameraClass;
+	if (!m_Camera)
+	{
+		return false;
+	}
+	m_2DCamera->SetPosition(0.0f, 0.0f, -1.0f); // camera for UI and 2D
+	m_2DCamera->Render();
+	m_2DCamera->GetViewMatrix(view2DMatrix);
 
 	// Set the initial position of the camera.
 	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
@@ -120,12 +132,34 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Create the text object.
+	m_Text = new TextClass;
+	if (!m_Text)
+	{
+		return false;
+	}
+
+	// Initialize the text object.
+	result = m_Text->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, view2DMatrix);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
+		return false;
+	}
+
 	return true;
 }
 
 
 void GraphicsClass::Shutdown()
 {
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = nullptr;
+	}
+
 	if (m_Bitmap)
 	{
 		delete m_Bitmap;
@@ -207,7 +241,7 @@ bool GraphicsClass::Render(float rotation)
 
 
 	// Clear the buffers to begin the scene.
-	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
+	m_Direct3D->BeginScene(0.0f, 0.0f, 1.0f, 1.0f);
 
 	// Generate the view matrix based on the camera's position.
 	m_Camera->Render();
@@ -215,35 +249,14 @@ bool GraphicsClass::Render(float rotation)
 	// Get the world, view, and projection matrices from the camera and d3d objects.
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
+	m_2DCamera->GetViewMatrix(view2DMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
-
-	m_Direct3D->TurnZBufferOff();
-
-	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 100, 100);
-	if (!result)
-	{
-		return false;
-	}
-
-	// TODO: Implement prototype for second view
-	/*
-	Once the vertex/index buffers are prepared we draw them using the texture shader.
-	Notice we send in the orthoMatrix instead of the projectionMatrix for rendering 2D.
-	Due note also that if your view matrix is changing you will need to create a default one for 2D rendering and use it instead of the regular view matrix.
-	In this tutorial using the regular view matrix is fine as the camera in this tutorial is stationary.
-	*/
-
-	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
-	if (!result)
-	{
-		return false;
-	}
 
 	m_Direct3D->TurnZBufferOn();
 
 	// Rotate the world matrix by the rotation value so that the triangle will spin.
-	worldMatrix = XMMatrixRotationY(rotation);
+	//worldMatrix = XMMatrixRotationY(rotation);
 	
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
@@ -257,6 +270,32 @@ bool GraphicsClass::Render(float rotation)
 	{
 		return false;
 	}
+
+	m_Direct3D->TurnZBufferOff();
+
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 100, 100);
+	if (!result)
+	{
+		return false;
+	}
+
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, view2DMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Turn on the alpha blending before rendering the text.
+	m_Direct3D->TurnOnAlphaBlending();
+
+	// Render the text strings.
+	result = m_Text->Render(m_Direct3D->GetDeviceContext(), worldMatrix, orthoMatrix);
+	if (!result)
+	{
+		return false;
+	}
+	// Turn off alpha blending after rendering the text.
+	m_Direct3D->TurnOffAlphaBlending();
 
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();

@@ -15,6 +15,7 @@
 #include "lightclass.h"
 #include "textureshaderclass.h"
 #include "bitmapclass.h"
+#include "textclass.h"
 
 
 /////////////
@@ -45,12 +46,13 @@ private:
 
 private:
 	D3DClass* m_Direct3D;
-	CameraClass* m_Camera;
+	CameraClass* m_Camera, *m_2DCamera;
 	ModelClass* m_Model;
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
 	TextureShaderClass* m_TextureShader;
 	BitmapClass* m_Bitmap;
+	TextClass* m_Text;
 };
 
 #endif
