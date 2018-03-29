@@ -39,8 +39,14 @@ private:
 	std::map<WORD, int> m_keyMap;
 	std::map<AnalogButtons, AnalogMapping> m_analogMap;
 
+	std::map<WORD, unsigned int> m_repeatMs;
+	std::map<AnalogButtons, unsigned int> m_analogRepeatMs;
+
+	std::map<WORD, DWORD> m_lastPress;
+	std::map<AnalogButtons, DWORD> m_analogLastPress;
+
 	void SetButtons();
-	void SendKeysOnTreshold(AnalogButtons, float, float, float, float);
+	void SendKeysOnTreshold(AnalogButtons, float, float, float, int);
 
 public:
 	XInputClass();
@@ -50,8 +56,11 @@ public:
 	std::map<WORD, std::string> m_Buttons;
 
 	float leftStickX, leftStickY;
+	float prevLeftStickX, prevLeftStickY;
 	float rightStickX, rightStickY;
+	float prevRightStickX, prevRightStickY;
 	float leftTrigger, rightTrigger;
+	float prevLeftTrigger, prevRightTrigger;
 
 	int GetPort();
 	XINPUT_GAMEPAD* GetState();
@@ -65,6 +74,10 @@ public:
 	void RemoveKeyMapping(int);
 	void RemoveAnalogKeyMapping(AnalogButtons);
 	void ClearMappings();
+
+	void SetRepeatIntervalMsAll(unsigned int);
+	void SetRepeatIntervalMs(WORD, unsigned int);
+	void SetAnalogRepeatIntervalMs(AnalogButtons, unsigned int);
 
 	void SetWindow(HWND);
 };
