@@ -12,8 +12,7 @@ XInputClass::XInputClass() : m_deadzoneX(0.05f), m_deadzoneY(0.02f), m_targetWin
 }
 
 XInputClass::~XInputClass()
-{
-}
+= default;
 
 int XInputClass::GetPort()
 {

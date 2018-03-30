@@ -3,8 +3,8 @@
 #define _XINPUTCLASS_H_
 
 // Includes
-#include <Xinput.h>
 #include <windows.h>
+#include <Xinput.h>
 #include <map>
 
 class XInputClass
